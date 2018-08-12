@@ -17,12 +17,12 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         pass
 
     def test_encryption_data_getters_client(self):
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH)
+        ed = EncryptionData(self.TEST_JSON_01_PATH)
 
         # we're assuming that the number of bytes sent for an entity(client or
         #   server) is constant for each evaluation
-        obtained_bytes_sent = ed.get_bytes_sent_list()
-        obtained_bytes_received = ed.get_bytes_received_list()
+        obtained_bytes_sent = ed.get_client_bytes_sent_list()
+        obtained_bytes_received = ed.get_client_bytes_received_list()
 
         expected_bytes_sent = [0, 901, 1]
         expected_bytes_received = [100, 200, 300]
@@ -39,20 +39,20 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         expected_line_2 = ['CAMELLIA-256-GCM-SHA384', 1, 2, 3]
         expected_results = [expected_line_1, expected_line_2]
         i = 0
-        for data_elem in ed:
+        for data_elem in ed.client():
             expected_line = expected_results[i]
-            obtained_line = ed.get_results_line()
+            obtained_line = data_elem.get_results_line()
             self.assertSequenceEqual(expected_line, obtained_line,
                                     'Wrong line returned')
             i += 1
 
     def test_encryption_data_getters_server(self):
-        ed = EncryptionData.Server(self.TEST_JSON_01_PATH)
+        ed = EncryptionData(self.TEST_JSON_01_PATH)
 
         # we're assuming that the number of bytes sent for an entity(client or
         #   server) is constant for each evaluation
-        obtained_bytes_sent = ed.get_bytes_sent_list()
-        obtained_bytes_received = ed.get_bytes_received_list()
+        obtained_bytes_sent = ed.get_server_bytes_sent_list()
+        obtained_bytes_received = ed.get_server_bytes_received_list()
 
         expected_bytes_sent = [10, 11, 12]
         expected_bytes_received = [100, 200, 300]
@@ -69,18 +69,18 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         expected_line_2 = ['CAMELLIA-256-GCM-SHA384', 1992, 2005, 2001]
         expected_results = [expected_line_1, expected_line_2]
         i = 0
-        for data_elem in ed:
+        for data_elem in ed.server():
             expected_line = expected_results[i]
-            obtained_line = ed.get_results_line()
+            obtained_line = data_elem.get_results_line()
             self.assertSequenceEqual(expected_line, obtained_line,
                                     'Wrong line returned')
             i += 1
 
     def test_encryption_data_sent_bytes_result_client(self):
         BYTES_SENT_PREFIX = 'bytes sent'
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH,
-                                  bytes_sent_prefix=BYTES_SENT_PREFIX)
-        obtained_xlxs_result = ed.get_xlxs_bytes_sent_result()
+        ed = EncryptionData(self.TEST_JSON_01_PATH,
+                            bytes_sent_label=BYTES_SENT_PREFIX)
+        obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
         expected_xlsx_result = (
             [BYTES_SENT_PREFIX, 0, 901, 1],
             ['RC4-128-SHA', 1992, 2005, 2001],
@@ -97,10 +97,10 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
             return 'abc'
 
         BYTES_SENT_PREFIX = 'bytes sent'
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH,
+        ed = EncryptionData(self.TEST_JSON_01_PATH,
                                   bytes_sent_prefix=BYTES_SENT_PREFIX,
-                                  encr_alg_regex = regex_func)
-        obtained_xlxs_result = ed.get_xlxs_bytes_sent_result()
+                                  ciphersuite_label_fn = regex_func)
+        obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
         expected_xlsx_result = (
             [BYTES_SENT_PREFIX, 0, 901, 1],
             ['abc', 1992, 2005, 2001],
@@ -111,13 +111,11 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
                                 'Wrong XLXS result. ')
 
-
-
     def test_encryption_data_sent_bytes_result_server(self):
         BYTES_SENT_PREFIX = 'bytes sent'
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH,
-        bytes_sent_prefix=BYTES_SENT_PREFIX)
-        obtained_xlxs_result = ed.get_xlxs_bytes_sent_result()
+        ed = EncryptionData(self.TEST_JSON_01_PATH,
+        bytes_sent_label=BYTES_SENT_PREFIX)
+        obtained_xlxs_result = ed.get_server_xlxs_bytes_sent_result()
         expected_xlsx_result = (
         [BYTES_SENT_PREFIX, 10, 11, 12],
         ['RC4-128-SHA', 1234, 5678, 90],
@@ -133,10 +131,10 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
             return 'abc'
 
         BYTES_SENT_PREFIX = 'bytes sent'
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH,
-        bytes_sent_prefix=BYTES_SENT_PREFIX,
-        bytes_sent_regex=regex_func)
-        obtained_xlxs_result = ed.get_xlxs_bytes_sent_result()
+        ed = EncryptionData(self.TEST_JSON_01_PATH,
+        bytes_sent_label=BYTES_SENT_PREFIX,
+        ciphersuite_label_fn=regex_func)
+        obtained_xlxs_result = ed.get_server_xlxs_bytes_sent_result()
         expected_xlsx_result = (
         [BYTES_SENT_PREFIX, 10, 11, 12],
         ['RC4-128-SHA', 1234, 5678, 90],
@@ -148,9 +146,9 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
 
     def test_encryption_data_received_bytes_result_client(self):
         BYTES_RECEIVED_PREFIX = 'bytes received'
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH,
-                                  BYTES_RECEIVED_PREFIX=BYTES_RECEIVED_PREFIX)
-        obtained_xlxs_result = ed.get_xlxs_bytes_sent_result()
+        ed = EncryptionData(self.TEST_JSON_01_PATH,
+                                  bytes_sent_label=BYTES_RECEIVED_PREFIX)
+        obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
         expected_xlsx_result = (
             [BYTES_RECEIVED_PREFIX, 100, 200, 300],
             ['RC4-128-SHA', 1992, 2005, 2001],
@@ -167,10 +165,10 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
             return 'abc'
 
         BYTES_RECEIVED_PREFIX = 'bytes received'
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH,
-                                  BYTES_RECEIVED_PREFIX=BYTES_RECEIVED_PREFIX,
-                                  encr_alg_regex = regex_func)
-        obtained_xlxs_result = ed.get_xlxs_bytes_sent_result()
+        ed = EncryptionData(self.TEST_JSON_01_PATH,
+                                  bytes_sent_label=BYTES_RECEIVED_PREFIX,
+                                  ciphersuite_label_fn = regex_func)
+        obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
         expected_xlsx_result = (
             [BYTES_RECEIVED_PREFIX, 100, 200, 300],
             ['abc', 1992, 2005, 2001],
@@ -183,9 +181,9 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
 
     def test_encryption_data_sent_bytes_result_server(self):
         BYTES_RECEIVED_PREFIX = 'bytes received'
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH,
-        BYTES_RECEIVED_PREFIX=BYTES_RECEIVED_PREFIX)
-        obtained_xlxs_result = ed.get_xlxs_bytes_sent_result()
+        ed = EncryptionData(self.TEST_JSON_01_PATH,
+        bytes_sent_label=BYTES_RECEIVED_PREFIX)
+        obtained_xlxs_result = ed.get_server_xlxs_bytes_sent_result()
         expected_xlsx_result = (
         [BYTES_RECEIVED_PREFIX, 100, 200, 300],
         ['RC4-128-SHA', 1234, 5678, 90],
@@ -201,10 +199,10 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
             return 'abc'
 
         BYTES_RECEIVED_PREFIX = 'bytes received'
-        ed = EncryptionData.Client(self.TEST_JSON_01_PATH,
-        BYTES_RECEIVED_PREFIX=BYTES_RECEIVED_PREFIX,
-        bytes_sent_regex=regex_func)
-        obtained_xlxs_result = ed.get_xlxs_bytes_sent_result()
+        ed = EncryptionData(self.TEST_JSON_01_PATH,
+        bytes_sent_label=BYTES_RECEIVED_PREFIX,
+        ciphersuite_label_fn=regex_func)
+        obtained_xlxs_result = ed.get_server_xlxs_bytes_sent_result()
         expected_xlsx_result = (
         [BYTES_RECEIVED_PREFIX, 100, 200, 300],
         ['RC4-128-SHA', 1234, 5678, 90],
