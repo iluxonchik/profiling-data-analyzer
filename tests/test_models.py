@@ -1,7 +1,7 @@
 import os
 import unittest
 from pathlib import Path
-from data.models import EncryptionData
+from data.models import EncryptionData, Defaults
 
 class ModelsBaseTestCase(unittest.TestCase):
     RES_DIR = Path('./test/res/')
@@ -41,7 +41,7 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         i = 0
         for data_elem in ed.client():
             expected_line = expected_results[i]
-            obtained_line = data_elem.get_results_line()
+            obtained_line = data_elem
             self.assertSequenceEqual(expected_line, obtained_line,
                                     'Wrong line returned')
             i += 1
@@ -71,7 +71,7 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         i = 0
         for data_elem in ed.server():
             expected_line = expected_results[i]
-            obtained_line = data_elem.get_results_line()
+            obtained_line = data_elem
             self.assertSequenceEqual(expected_line, obtained_line,
                                     'Wrong line returned')
             i += 1
@@ -93,12 +93,12 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
 
     def test_encryption_data_sent_bytes_result_client_custom_regex(self):
 
-        def regex_func(raw_str, regex):
+        def regex_func(raw_str):
             return 'abc'
 
         BYTES_SENT_PREFIX = 'bytes sent'
         ed = EncryptionData(self.TEST_JSON_01_PATH,
-                                  bytes_sent_prefix=BYTES_SENT_PREFIX,
+                                  bytes_sent_label=BYTES_SENT_PREFIX,
                                   ciphersuite_label_fn = regex_func)
         obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
         expected_xlsx_result = (
@@ -127,7 +127,7 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
 
     def test_encryption_data_sent_bytes_result_server_with_custom_regex(self):
 
-        def regex_func(raw_str, regex):
+        def regex_func(raw_str):
             return 'abc'
 
         BYTES_SENT_PREFIX = 'bytes sent'
@@ -137,18 +137,18 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         obtained_xlxs_result = ed.get_server_xlxs_bytes_sent_result()
         expected_xlsx_result = (
         [BYTES_SENT_PREFIX, 10, 11, 12],
-        ['RC4-128-SHA', 1234, 5678, 90],
-        ['CAMELLIA-256-GCM-SHA384', 1992, 2005, 2001],
+        ['abc', 1234, 5678, 90],
+        ['abc', 1992, 2005, 2001],
         )
 
         self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
         'Wrong XLXS result.')
 
     def test_encryption_data_received_bytes_result_client(self):
-        BYTES_RECEIVED_PREFIX = 'bytes received'
+        BYTES_RECEIVED_PREFIX = 'bytes received custom'
         ed = EncryptionData(self.TEST_JSON_01_PATH,
-                                  bytes_sent_label=BYTES_RECEIVED_PREFIX)
-        obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
+                                  bytes_received_label=BYTES_RECEIVED_PREFIX)
+        obtained_xlxs_result = ed.get_client_xlxs_bytes_received_result()
         expected_xlsx_result = (
             [BYTES_RECEIVED_PREFIX, 100, 200, 300],
             ['RC4-128-SHA', 1992, 2005, 2001],
@@ -159,55 +159,67 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
                                 'Wrong XLXS result.')
 
-    def test_encryption_data_sent_bytes_result_client_custom_regex(self):
-
-        def regex_func(raw_str, regex):
-            return 'abc'
-
-        BYTES_RECEIVED_PREFIX = 'bytes received'
+    def test_encryption_data_received_bytes_result_server(self):
+        BYTES_RECEIVED_PREFIX = 'bytes received custom'
         ed = EncryptionData(self.TEST_JSON_01_PATH,
-                                  bytes_sent_label=BYTES_RECEIVED_PREFIX,
-                                  ciphersuite_label_fn = regex_func)
-        obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
+                                  bytes_received_label=BYTES_RECEIVED_PREFIX)
+        obtained_xlxs_result = ed.get_server_xlxs_bytes_received_result()
         expected_xlsx_result = (
             [BYTES_RECEIVED_PREFIX, 100, 200, 300],
-            ['abc', 1992, 2005, 2001],
-            ['abc', 1, 2, 3],
+            ['RC4-128-SHA', 1234, 5678, 90],
+            ['CAMELLIA-256-GCM-SHA384', 1992, 2005, 2001],
+        )
+
+        self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
+                                'Wrong XLXS result.')
+
+    def test_encryption_data_received_bytes_result_client_default_lbl(self):
+        ed = EncryptionData(self.TEST_JSON_01_PATH)
+        obtained_xlxs_result = ed.get_client_xlxs_bytes_received_result()
+        expected_xlsx_result = (
+            [Defaults.DEFAULT_BYTES_RECEIVED_LABEL, 100, 200, 300],
+            ['RC4-128-SHA', 1992, 2005, 2001],
+            ['CAMELLIA-256-GCM-SHA384', 1, 2, 3],
 
         )
 
         self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
-                                'Wrong XLXS result. ')
+                                'Wrong XLXS result.')
 
-    def test_encryption_data_sent_bytes_result_server(self):
-        BYTES_RECEIVED_PREFIX = 'bytes received'
-        ed = EncryptionData(self.TEST_JSON_01_PATH,
-        bytes_sent_label=BYTES_RECEIVED_PREFIX)
+    def test_encryption_data_received_bytes_result_server_default_lbl(self):
+        ed = EncryptionData(self.TEST_JSON_01_PATH)
+        obtained_xlxs_result = ed.get_server_xlxs_bytes_received_result()
+        expected_xlsx_result = (
+            [Defaults.DEFAULT_BYTES_RECEIVED_LABEL, 100, 200, 300],
+            ['RC4-128-SHA', 1234, 5678, 90],
+            ['CAMELLIA-256-GCM-SHA384', 1992, 2005, 2001],
+        )
+
+        self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
+                                'Wrong XLXS result.')
+
+    def test_encryption_data_sent_bytes_result_client_default_lbl(self):
+        ed = EncryptionData(self.TEST_JSON_01_PATH)
+        obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
+        expected_xlsx_result = (
+            [Defaults.DEFAULT_BYTES_SENT_LABEL, 0, 901, 1],
+            ['RC4-128-SHA', 1992, 2005, 2001], 
+            ['CAMELLIA-256-GCM-SHA384', 1, 2, 3],
+
+        )
+
+        self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
+                                'Wrong XLXS result.')
+
+    def test_encryption_data_sent_bytes_result_server_default_lbl(self):
+        ed = EncryptionData(self.TEST_JSON_01_PATH)
         obtained_xlxs_result = ed.get_server_xlxs_bytes_sent_result()
         expected_xlsx_result = (
-        [BYTES_RECEIVED_PREFIX, 100, 200, 300],
-        ['RC4-128-SHA', 1234, 5678, 90],
-        ['CAMELLIA-256-GCM-SHA384', 1992, 2005, 2001],
+            [Defaults.DEFAULT_BYTES_SENT_LABEL, 10, 11, 12],
+            ['RC4-128-SHA', 1234, 5678, 90],
+            ['CAMELLIA-256-GCM-SHA384', 1992, 2005, 2001],
         )
 
         self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
-        'Wrong XLXS result.')
+                                'Wrong XLXS result.')
 
-    def test_encryption_data_sent_bytes_result_server_with_custom_regex(self):
-
-        def regex_func(raw_str, regex):
-            return 'abc'
-
-        BYTES_RECEIVED_PREFIX = 'bytes received'
-        ed = EncryptionData(self.TEST_JSON_01_PATH,
-        bytes_sent_label=BYTES_RECEIVED_PREFIX,
-        ciphersuite_label_fn=regex_func)
-        obtained_xlxs_result = ed.get_server_xlxs_bytes_sent_result()
-        expected_xlsx_result = (
-        [BYTES_RECEIVED_PREFIX, 100, 200, 300],
-        ['RC4-128-SHA', 1234, 5678, 90],
-        ['CAMELLIA-256-GCM-SHA384', 1992, 2005, 2001],
-        )
-
-        self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
-        'Wrong XLXS result.')
