@@ -1,5 +1,6 @@
 import ast
 import json
+import xlsxwriter
 
 def convert_dict_keys_to_str(orig_dict):
     if not isinstance(orig_dict, dict):
@@ -35,3 +36,17 @@ def parse_json_file_to_dict(path):
         json_contents = json.load(json_file, 
                                   object_hook=parse_json_to_internal_dict)
         return json_contents
+
+def write_excel_to_file(content, filename):
+    workbook = xlsxwriter.Workbook(filename)
+    worksheet = workbook.add_worksheet()
+
+    row_index = 0
+    for row in content:
+        column_index = 0
+        for elem in row:
+            worksheet.write(row_index, column_index, elem)
+            column_index += 1
+        
+        row_index += 1
+    workbook.close()
