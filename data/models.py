@@ -167,14 +167,14 @@ class EncryptionData(object):
         """
         # extract labels and results
         labels = [sublist[0] for sublist in res]
-        mtrx_to_sort = [sublist[1:] for sublist in res]
+        mtrx_to_sort = numpy.array([sublist[1:] for sublist in res])
 
-        # rotate matrix by -90 degrees
-        rotated_mtrx = numpy.rot90(mtrx_to_sort, 3)
+        # transpose matrix
+        rotated_mtrx = mtrx_to_sort.transpose()
         # sort by column 0
         sorted_mtrx = sorted(rotated_mtrx, key=lambda line: line[0])
-        # roatate the sorted matrix back by 90 degrees
-        sorted_and_rotated_matrix = numpy.rot90(sorted_mtrx, 1)
+        # transpose matrix again
+        sorted_and_rotated_matrix = numpy.array(sorted_mtrx).transpose()
         sorted_and_rotated_matrix = sorted_and_rotated_matrix.tolist()
 
         matrix_size = len(sorted_and_rotated_matrix)
@@ -197,6 +197,7 @@ class EncryptionData(object):
         self._container.parse_if_not_parsed()
         res = (self._container.client_bytes_sent, 
                *self._container.client_profiling_results)
+        res = self._sort_result_by_bytes(res)
         return res
 
     def get_server_bytes_received_list(self):
@@ -211,16 +212,19 @@ class EncryptionData(object):
         self._container.parse_if_not_parsed()
         res = (self._container.server_bytes_sent, 
                *self._container.server_profiling_results)
+        res = self._sort_result_by_bytes(res)
         return res
 
     def get_client_xlxs_bytes_received_result(self):
         self._container.parse_if_not_parsed()
         res = (self._container.client_bytes_received,
                *self._container.client_profiling_results)
+        res = self._sort_result_by_bytes(res)
         return res
 
     def get_server_xlxs_bytes_received_result(self):
         self._container.parse_if_not_parsed()
         res = (self._container.server_bytes_received,
                *self._container.server_profiling_results)
+        res = self._sort_result_by_bytes(res)
         return res
