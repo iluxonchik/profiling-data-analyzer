@@ -3,6 +3,7 @@ Module containing data models which can be used to query the JSON files
 containing the profiling information.
 """
 import re
+import numpy
 
 from utils import parse_json_file_to_dict
 
@@ -159,6 +160,30 @@ class EncryptionData(object):
     def server(self):
         for server_res in self._container.server_profiling_results:
             yield server_res
+
+    def _sort_result_by_bytes(self, res):
+        """
+        Sort the final result by the first row.
+        """
+        # extract labels and results
+        labels = [sublist[0] for sublist in res]
+        mtrx_to_sort = [sublist[1:] for sublist in res]
+
+        # rotate matrix by -90 degrees
+        rotated_mtrx = numpy.rot90(mtrx_to_sort, 3)
+        # sort by column 0
+        sorted_mtrx = sorted(rotated_mtrx, key=lambda line: line[0])
+        # roatate the sorted matrix back by 90 degrees
+        sorted_and_rotated_matrix = numpy.rot90(sorted_mtrx, 1)
+        sorted_and_rotated_matrix = sorted_and_rotated_matrix.tolist()
+
+        matrix_size = len(sorted_and_rotated_matrix)
+
+        assert len(labels) == matrix_size, ('Mismatch'
+                               ' in the number of labels and matrix rows.')
+        # join labels and results
+        res = [[labels[i]] + sorted_and_rotated_matrix[i] for i in range(matrix_size)]
+        return res
 
     def get_client_bytes_sent_list(self):
         self._container.parse_if_not_parsed()
