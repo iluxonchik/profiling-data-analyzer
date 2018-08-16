@@ -4,7 +4,7 @@ from pathlib import Path
 from data.models import EncryptionData, Defaults
 
 class ModelsBaseTestCase(unittest.TestCase):
-    RES_DIR = Path('./test/res/')
+    RES_DIR = Path('./tests/res/')
     JSON_01_FILENAME = 'pencres_01.json'
     TEST_JSON_01_PATH = os.path.join(RES_DIR, JSON_01_FILENAME)
 
@@ -82,9 +82,9 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
                             bytes_sent_label=BYTES_SENT_PREFIX)
         obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
         expected_xlsx_result = (
-            [BYTES_SENT_PREFIX, 0, 901, 1],
-            ['RC4-128-SHA', 1992, 2005, 2001],
-            ['CAMELLIA-256-GCM-SHA384', 1, 2, 3],
+            [BYTES_SENT_PREFIX, 0, 1, 901],
+            ['RC4-128-SHA', 1992, 2001, 2005],
+            ['CAMELLIA-256-GCM-SHA384', 1, 3, 2],
 
         )
 
@@ -102,9 +102,9 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
                                   ciphersuite_label_fn = regex_func)
         obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
         expected_xlsx_result = (
-            [BYTES_SENT_PREFIX, 0, 901, 1],
-            ['abc', 1992, 2005, 2001],
-            ['abc', 1, 2, 3],
+            [BYTES_SENT_PREFIX, 0, 1, 901],
+            ['abc', 1992, 2001, 2005],
+            ['abc', 1, 3, 2],
 
         )
 
@@ -202,9 +202,9 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         ed = EncryptionData(self.TEST_JSON_01_PATH)
         obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
         expected_xlsx_result = (
-            [Defaults.DEFAULT_BYTES_SENT_LABEL, 0, 901, 1],
-            ['RC4-128-SHA', 1992, 2005, 2001], 
-            ['CAMELLIA-256-GCM-SHA384', 1, 2, 3],
+            [Defaults.DEFAULT_BYTES_SENT_LABEL, 0, 1, 901],
+            ['RC4-128-SHA', 1992, 2001, 2005], 
+            ['CAMELLIA-256-GCM-SHA384', 1, 3, 2],
 
         )
 
@@ -237,6 +237,23 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
             ['alg_1', 1, 2, 3, 4],
             ['alg_2', 1, 2, 3, 4],
             ['alg_3', 1, 2, 3, 4],
+        ]
+
+        obtained = ed._sort_result_by_bytes(sample_res)
+        self.assertSequenceEqual(expected, obtained, 'Results sorted wrong')
+
+        sample_res = [
+            ['bytes', 14, 56, 18, 1],
+            ['alg_1', 4, 1, 56, 17],
+            ['alg_2', 0, 3, 4, 9],
+            ['alg_3', 18, 7, 4, 5],
+        ]
+
+        expected = [
+            ['bytes', 1, 14, 18, 56],
+            ['alg_1', 17, 4, 56, 1],
+            ['alg_2', 9, 0, 4, 3],
+            ['alg_3', 5, 18, 4, 7],
         ]
 
         obtained = ed._sort_result_by_bytes(sample_res)
