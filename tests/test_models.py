@@ -223,3 +223,22 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
                                 'Wrong XLXS result.')
 
+    def test_results_sorting(self):
+        ed = EncryptionData(self.TEST_JSON_01_PATH)
+        sample_res = [
+            ['bytes', 3, 4, 2, 1],
+            ['alg_1', 3, 4, 2, 1],
+            ['alg_2', 3, 4, 2, 1],
+            ['alg_3', 3, 4, 2, 1],
+        ]
+
+        expected = [
+            ['bytes', 1, 2, 3, 4],
+            ['alg_1', 1, 2, 3, 4],
+            ['alg_2', 1, 2, 3, 4],
+            ['alg_3', 1, 2, 3, 4],
+        ]
+
+        obtained = ed._sort_result_by_bytes(sample_res)
+        self.assertSequenceEqual(expected, obtained, 'Results sorted wrong')
+
