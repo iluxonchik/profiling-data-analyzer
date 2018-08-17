@@ -6,7 +6,9 @@ from data.models import EncryptionData, Defaults
 class ModelsBaseTestCase(unittest.TestCase):
     RES_DIR = Path('./tests/res/')
     JSON_01_FILENAME = 'pencres_01.json'
+    JSON_02_FILENAME = 'pencres_02.json'
     TEST_JSON_01_PATH = os.path.join(RES_DIR, JSON_01_FILENAME)
+    TEST_JSON_02_PATH = os.path.join(RES_DIR, JSON_02_FILENAME)
 
 class EncryptionDataTestCase(ModelsBaseTestCase):
 
@@ -259,3 +261,17 @@ class EncryptionDataTestCase(ModelsBaseTestCase):
         obtained = ed._sort_result_by_bytes(sample_res)
         self.assertSequenceEqual(expected, obtained, 'Results sorted wrong')
 
+    def test_encryption_data_sent_bytes_result_client_mixed_bytes_order(self):
+        BYTES_SENT_PREFIX = 'bytes sent'
+        ed = EncryptionData(self.TEST_JSON_02_PATH,
+                            bytes_sent_label=BYTES_SENT_PREFIX)
+        obtained_xlxs_result = ed.get_client_xlxs_bytes_sent_result()
+        expected_xlsx_result = (
+            [BYTES_SENT_PREFIX, 0, 1, 901],
+            ['RC4-128-SHA', 1992, 2001, 2005],
+            ['CAMELLIA-256-GCM-SHA384', 1, 3, 2],
+
+        )
+
+        self.assertSequenceEqual(expected_xlsx_result, obtained_xlxs_result,
+                                'Wrong XLXS result.')
