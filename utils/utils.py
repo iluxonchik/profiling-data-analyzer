@@ -2,6 +2,8 @@ import ast
 import json
 import xlsxwriter
 
+from collections import OrderedDict
+
 def convert_dict_keys_to_str(orig_dict):
     if not isinstance(orig_dict, dict):
         return orig_dict
@@ -19,9 +21,10 @@ def parse_json_to_internal_dict(dictionary):
     if not isinstance(dictionary, dict):
         return dictionary
 
+    dictionary = OrderedDict(dictionary)
     dict_entries = ((convert_to_literal(key), parse_json_to_internal_dict(value))
                      for key, value in dictionary.items())
-    return dict(dict_entries)
+    return OrderedDict(dict_entries)
 
 
 def parse_json_file_to_dict(path):
@@ -35,7 +38,7 @@ def parse_json_file_to_dict(path):
     with open(path, 'r') as json_file:
         json_contents = json.load(json_file, 
                                   object_hook=parse_json_to_internal_dict)
-        return json_contents
+    return json_contents
 
 def write_excel_to_file(content, filename):
     workbook = xlsxwriter.Workbook(filename)

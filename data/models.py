@@ -90,7 +90,7 @@ class EncryptionDataContainer(object):
         bytes_sent = [self._bytes_sent_label]
         bytes_received = [self._bytes_received_label]
 
-        fn_data = self._get_entity_function_data(data ,entity)
+        fn_data = self._get_entity_function_data(data, entity)
 
         first_entry = list(fn_data.values())[0]
 
@@ -100,14 +100,24 @@ class EncryptionDataContainer(object):
 
         return bytes_sent, bytes_received
 
-    def _parse_entity_profiling_results(self, data, entity):
-        
+    def _parse_entity_profiling_results(self, data, entity, 
+                                        bytes_sent, bytes_received):
+        assert len(bytes_sent) == len(bytes_received)
+        byte_pairs = []
+        for i in range(len(bytes_sent)):
+            byte_pairs.append((bytes_sent[i], bytes_received[i]))
+
         fn_data = self._get_entity_function_data(data, entity)
         profiling_results = []
         for cipher_name, cipher_profiling in fn_data.items():
             cipher_label = self._ciphersuite_label_fn(cipher_name)
-            profiling_values = list(cipher_profiling.values())
-            profiling_results.append([cipher_label, *profiling_values])
+            
+            bytes_profres_map = {}
+            for cipher_byte_pair, profiling_res in cipher_profiling.items():
+                bytes_profres_map[cipher_byte_pair] = profiling_res
+
+            cipher_profiling_values = [bytes_profres_map[pair] for pair in byte_pairs] 
+            profiling_results.append([cipher_label, *cipher_profiling_values])
 
         return profiling_results
 
@@ -116,7 +126,11 @@ class EncryptionDataContainer(object):
         bytes_sent, bytes_received = self._parse_entity_bytes_sent_and_received(
                                                                                 data, 
                                                                                 entity)
-        profiling_results = self._parse_entity_profiling_results(data, entity)
+        profiling_results = self._parse_entity_profiling_results(data, 
+                                                                 entity,
+                                                                 bytes_sent[1:],
+                                                                 bytes_received[1:])
+
         return self.EntityDTO(bytes_sent, bytes_received, profiling_results)
 
     def parse(self):
